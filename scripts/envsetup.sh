@@ -1049,6 +1049,7 @@ if [  -d /home/linaro/debs ] && [ $(ls /home/linaro//debs/*.deb | wc -l) -gt 0 ]
 		sleep 1
 		dpkg -i -R /home/linaro/debs
 	done
+	find /home/linaro/debs -name "*.deb" -type f -delete
 fi
 
 echo -e "LC_ALL=C.UTF-8\n" > /etc/default/locale

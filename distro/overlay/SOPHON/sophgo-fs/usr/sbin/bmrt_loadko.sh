@@ -188,6 +188,14 @@ function load_ethernet_ko()
         fi
 }
 
+function load_spacc_ko()
+{
+	echo load spacc ko ...
+	if [ -f /mnt/system/ko/sophon_spacc.ko ]; then
+		insmod /mnt/system/ko/sophon_spacc.ko
+	fi
+}
+
 load_soph_base_ko
 load_soph_sys_ko
 load_soph_vpss_ko
@@ -209,6 +217,7 @@ load_soph_drm_ko
 # load_usb_f_serial_ko
 load_soph_ldc_ko
 load_ethernet_ko
+load_spacc_ko
 
 # modify permission for drivers
 echo "load.sh starting..."
@@ -225,6 +234,7 @@ echo "load.sh starting..."
 ./sbin/load.sh -d soph-ive
 ./sbin/load.sh -d soph-stitch
 ./sbin/load.sh -d soph-ldc
+./sbin/load.sh -d spacc
 ./sbin/load.sh -p /dev/snd/ -d controlC0
 ./sbin/load.sh -p /dev/snd/ -d controlC1
 ./sbin/load.sh -p /dev/snd/ -d controlC2

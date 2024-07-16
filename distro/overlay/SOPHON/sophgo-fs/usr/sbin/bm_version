@@ -1,6 +1,15 @@
 #!/bin/bash
 
-echo 'Gemini_SDK'
+sdkv=$(sudo busybox devmem 0x27101024)
+sdkv=$((sdkv & 0xff))
+
+if [[ $sdkv -eq 193 ]] || [[ $sdkv -eq 249 ]];then
+        echo 'SophonSDK(CV186AH) 1.7'
+else
+        echo 'SophonSDK(BM1688) 1.7'
+fi
+
+
 dpkg -l | grep sophon-soc-libsophon | awk '{printf "%s : %s\n",$2,$3}'
 dpkg -l | grep sophon-media-soc-sophon-ffmpeg | awk '{printf "%s : %s\n",$2,$3}'
 dpkg -l | grep sophon-media-soc-sophon-opencv | awk '{printf "%s : %s\n",$2,$3}'
