@@ -296,6 +296,17 @@ function load_wifi_ko()
 	fi
 }
 
+function load_yaxin_modules()
+{
+	echo load load_yaxin_modules ko ...
+	if [ -f /mnt/system/ko/8852bs.ko ]; then
+		insmod /mnt/system/ko/8852bs.ko
+	fi
+	if [ -f /mnt/system/ko/rtl8367.ko ]; then
+		insmod /mnt/system/ko/rtl8367.ko
+	fi
+}
+
 monitor_memory() {
 	local THRESHOLD=$((160 * 1024))
 	local avail_mem
@@ -358,6 +369,8 @@ load_soph_ldc_ko
 load_ethernet_ko
 load_spacc_ko
 load_wifi_ko
+
+load_yaxin_modules
 
 # modify permission for drivers
 echo "load.sh starting..."
