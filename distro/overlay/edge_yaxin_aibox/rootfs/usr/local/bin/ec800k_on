@@ -1,0 +1,81 @@
+#!/bin/bash
+
+# ==========================================
+# EC800K ECM 自动上网脚本 (最终可用版)
+# ==========================================
+
+# 1. 参数配置区
+AT_PORT="/dev/ttyS2"
+INTERFACE="usb0"
+APN="cmnet"
+RESET_GPIO=304
+
+echo "=========================================="
+echo "  开始初始化 EC800K (ECM 模式)"
+echo "=========================================="
+
+# 1.5 硬件复位 (新增)
+echo "-> 正在通过 GPIO${RESET_GPIO} 复位模组..."
+if [ ! -d /sys/class/gpio/gpio${RESET_GPIO} ]; then
+    echo ${RESET_GPIO} > /sys/class/gpio/export 2>/dev/null
+    sleep 0.1
+fi
+echo out > /sys/class/gpio/gpio${RESET_GPIO}/direction
+
+echo 1 > /sys/class/gpio/gpio${RESET_GPIO}/value
+sleep 0.4
+echo 0 > /sys/class/gpio/gpio${RESET_GPIO}/value
+sleep 5
+
+# 2. 串口初始化
+if [ -c "$AT_PORT" ]; then
+    echo "-> 正在初始化串口 $AT_PORT..."
+    stty -F $AT_PORT 115200 raw -echo -echoe -echok -crtscts -ixon -ixoff
+else
+    echo "❌ 错误: 找不到串口设备 $AT_PORT"
+    exit 1
+fi
+
+# 3. 发送 AT 指令函数 (保留你的原版，实测可用)
+send_at() {
+    local cmd=$1
+    local wait_time=${2:-1}
+
+    echo -e "${cmd}\r" > $AT_PORT
+    sleep $wait_time
+}
+
+# 4. 执行 AT 指令序列
+echo "-> 正在发送 AT 指令激活数据通道..."
+send_at "AT" 0.5
+send_at "AT+CPIN?" 0.5
+send_at "AT+CSQ" 0.5
+send_at "AT+CEREG?" 0.5
+send_at 'AT+QCFG="usbnet",1' 0.5
+send_at "AT+CGDCONT=1,\"IP\",\"$APN\"" 0.5
+send_at "AT+CGACT=1,1" 2
+
+echo "-> 正在执行 USB 网卡拨号 (AT+QNETDEVCTL)..."
+send_at "AT+QNETDEVCTL=1,1,1" 2
+
+# 5. 配置 Linux 系统网络
+echo "-> 等待 $INTERFACE 网卡生成..."
+for i in {1..10}; do
+    if ip link show $INTERFACE > /dev/null 2>&1; then break; fi
+    sleep 1
+done
+
+if ! ip link show $INTERFACE > /dev/null 2>&1; then
+    echo "❌ 错误: 未找到 $INTERFACE 网卡，请确认 USB 连接。"
+    exit 1
+fi
+
+ip link set $INTERFACE up
+
+# 通过 DHCP 获取 IP (完全依赖 dhclient 或 udhcpc)
+echo "-> 正在获取 IP 地址..."
+if command -v udhcpc > /dev/null 2>&1; then
+    udhcpc -i $INTERFACE -q -n -t 5 > /dev/null 2>&1
+elif command -v dhclient > /dev/null 2>&1; then
+    dhclient -v $INTERFACE > /dev/null 2>&1
+fi

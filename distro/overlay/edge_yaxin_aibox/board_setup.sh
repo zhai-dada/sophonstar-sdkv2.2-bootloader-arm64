@@ -35,6 +35,8 @@ systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
 
 systemctl disable sophliteos.service SophonHDMI.service nginx.service
 
+systemctl enable ec800k.service
+
 # 6. 关闭 GNOME 桌面黑屏与休眠 (桌面层面 dconf 配置)
 echo "Disabling GNOME power saving and screensaver..."
 mkdir -p /etc/dconf/db/local.d/

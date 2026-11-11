@@ -1,0 +1,22 @@
+[Unit]
+Description=EC800K 4G ECM Network Setup
+# 在网络和 USB 设备就绪后启动
+After=network.target sys-subsystem-net-devices-usb0.device
+Wants=network.target
+
+[Service]
+Type=oneshot
+# 执行你的脚本
+ExecStart=/usr/local/bin/ec800k_on
+# 如果脚本失败（返回非 0），则等待 15 秒后重试，最多重试 5 次
+Restart=on-failure
+RestartSec=15
+StartLimitBurst=5
+# 即使脚本执行完毕，也保持 active 状态，方便查看状态
+RemainAfterExit=yes
+# 输出日志到 journald
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
